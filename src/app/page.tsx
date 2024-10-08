@@ -1,101 +1,137 @@
-import Image from "next/image";
+"use client"
+import {ChangeEvent, useEffect, useRef, useState} from "react";
+
+import opentype, {Font} from "opentype.js";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    const [font, setFont] = useState<Font | null>()
+    const [fontSize, setFontSize] = useState<number>(48)
+    const [asc, setAsc] = useState<string>("0")
+    const [dsc, setDsc] = useState<string>("0")
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    const handleFileChange= async (e: ChangeEvent<HTMLInputElement>) =>  {
+        const file = e.target.files?.[0]
+        if (!file) { return }
+        setFont(opentype.parse(await file.arrayBuffer()) as Font)
+    }
+
+    const draw = () => {
+        if (!font) { return }
+        const canvas = canvasRef.current;
+        if (!canvas) { return }
+        const context = canvas.getContext('2d');
+        if (!context) { return }
+        const text = 'Hello, Next.js with opentype.js!';
+
+        // Set canvas dimensions
+        canvas.width = 800;
+        canvas.height = 400;
+
+        // Clear the canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Set the font size and color
+        context.fillStyle = '#EDE9FE';
+        context.font = '40px sans-serif'; // Fallback font
+
+        // Positioning
+        const x = 50;
+        const y = 200;
+
+        console.log(font)
+        // Render the text using the loaded font
+        const path = font.getPath(text, x, y, fontSize);
+        path.draw(context);
+
+        const aboveBaseline = (font.ascender / font.unitsPerEm) * fontSize; // Ascender position
+        const belowBaseline = (font.descender / font.unitsPerEm) * fontSize; //
+
+
+        //base line
+        context.strokeStyle = 'white';
+        context.beginPath();
+        context.moveTo(0, 200);
+        context.lineTo(canvas.width, 200);
+        context.stroke();
+
+        //ascender line
+        context.strokeStyle = 'red';
+        context.beginPath();
+        context.moveTo(0, 200 - aboveBaseline);
+        context.lineTo(canvas.width, 200 - aboveBaseline);
+        context.stroke();
+
+        //descender line
+        context.strokeStyle = 'red';
+        context.beginPath();
+        context.moveTo(0, 200 - belowBaseline);
+        context.lineTo(canvas.width, 200 - belowBaseline);
+        context.stroke();
+    }
+
+    const redraw = () => {
+        if (!font) { return }
+        const iasc= parseInt(asc)
+        const idsc= parseInt(dsc)
+
+        font.ascender = iasc;
+        font.tables["os2"].sTypoAscender = iasc;
+        font.tables["hhea"].ascender = iasc;
+        font.descender = idsc;
+        font.tables["os2"].sTypoDescender = idsc;
+        font.tables["hhea"].descender = idsc;
+
+        draw()
+    }
+
+    const save = () => {
+        if (!font) { return }
+        const href = window.URL.createObjectURL(new Blob([font.toArrayBuffer()]));
+        Object.assign(document.createElement('a'), {download: "out.otf", href}).click();
+    }
+
+    useEffect(() => {
+        if (!font) { return }
+        setAsc(font.ascender.toString())
+        setDsc(font.descender.toString())
+        draw()
+    }, [font]);
+
+    useEffect(() => {
+        draw()
+    }, [fontSize]);
+
+    return (
+        <>
+
+            <div>Hello world</div>
+
+            <input type={"file"} accept={".otf"} onChange={handleFileChange}/>
+
+            <canvas ref={canvasRef} className={"border-2 border-violet-100"}/>
+
+            <input
+                className={"m-2 text-zinc-950"}
+                type={"number"} value={asc}
+                onChange={(e) => { setAsc(e.target.value) }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+            <input className={"m-2 text-zinc-950"}
+                   type={"number"}
+                   value={dsc}
+                   onChange={(e) => { setDsc(e.target.value) }}
+            />
+
+            <input className={"m-2 text-zinc-950"}
+                   type={"number"}
+                   value={fontSize}
+                   onChange={(e) => { setFontSize(parseInt(e.target.value)) }}
+            />
+
+            <button className={"m-2"} onClick={redraw}>Redraw</button>
+
+            <button onClick={save}>Save</button>
+        </>
+    );
 }
