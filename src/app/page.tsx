@@ -2,6 +2,10 @@
 import {ChangeEvent, useEffect, useRef, useState} from "react";
 
 import opentype, {Font} from "opentype.js";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import {Label} from "@/components/ui/label";
+import {Slider} from "@/components/ui/slider";
 
 export default function Home() {
 
@@ -18,36 +22,32 @@ export default function Home() {
     }
 
     const draw = () => {
-        if (!font) { return }
         const canvas = canvasRef.current;
         if (!canvas) { return }
         const context = canvas.getContext('2d');
         if (!context) { return }
-        const text = 'Hello, Next.js with opentype.js!';
 
-        // Set canvas dimensions
         canvas.width = 800;
         canvas.height = 400;
 
-        // Clear the canvas
-        context.clearRect(0, 0, canvas.width, canvas.height);
+        if (!font) { return }
+        console.log(font)
 
-        // Set the font size and color
-        context.fillStyle = '#EDE9FE';
-        context.font = '40px sans-serif'; // Fallback font
-
-        // Positioning
-        const x = 50;
+        const text = 'Hello, Next.js with opentype.js!';
+        const x = 16;
         const y = 200;
 
-        console.log(font)
-        // Render the text using the loaded font
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "#FFFFFF";
+
+
         const path = font.getPath(text, x, y, fontSize);
+        path.fill = "#FFFFFF";
         path.draw(context);
 
-        const aboveBaseline = (font.ascender / font.unitsPerEm) * fontSize; // Ascender position
-        const belowBaseline = (font.descender / font.unitsPerEm) * fontSize; //
 
+        const aboveBaseline = (font.ascender / font.unitsPerEm) * fontSize;
+        const belowBaseline = (font.descender / font.unitsPerEm) * fontSize;
 
         //base line
         context.strokeStyle = 'white';
@@ -104,34 +104,47 @@ export default function Home() {
     }, [fontSize]);
 
     return (
-        <>
+            <div className={"flex-1 w-full items-center"}>
+                <canvas ref={canvasRef} className={"rounded-md border border-input w-[800px] h-[400px] mx-auto mt-8"}/>
 
-            <div>Hello world</div>
+                <Input className={"w-[33rem] mt-4 mx-auto"} type={"file"} accept={".otf"} onChange={handleFileChange}/>
 
-            <input type={"file"} accept={".otf"} onChange={handleFileChange}/>
+                <div className={"flex mt-4 justify-center"}>
+                    <div className={"w-64 mr-4"}>
+                        <Label>Ascender</Label>
+                        <Input type={"number"}
+                               value={asc}
+                               onChange={(e) => {
+                                   setAsc(e.target.value)
+                               }}
+                        />
+                    </div>
+                    <div className={"w-64 mb-4"}>
+                        <Label>Descender</Label>
+                        <Input
+                            type={"number"}
+                            value={dsc}
+                            onChange={(e) => {
+                                setDsc(e.target.value)
+                            }}
+                        />
+                    </div>
+                </div>
 
-            <canvas ref={canvasRef} className={"border-2 border-violet-100"}/>
+                <div className={"w-[33rem] mb-4 mx-auto"}>
+                    <Label>Font size: {fontSize}</Label>
+                    <Slider defaultValue={[fontSize]} max={100} step={1}
+                            value={[fontSize]}
+                            onValueChange={(e) => {
+                                setFontSize(e[0])
+                            }}
+                    />
+                </div>
 
-            <input
-                className={"m-2 text-zinc-950"}
-                type={"number"} value={asc}
-                onChange={(e) => { setAsc(e.target.value) }}
-            />
-            <input className={"m-2 text-zinc-950"}
-                   type={"number"}
-                   value={dsc}
-                   onChange={(e) => { setDsc(e.target.value) }}
-            />
-
-            <input className={"m-2 text-zinc-950"}
-                   type={"number"}
-                   value={fontSize}
-                   onChange={(e) => { setFontSize(parseInt(e.target.value)) }}
-            />
-
-            <button className={"m-2"} onClick={redraw}>Redraw</button>
-
-            <button onClick={save}>Save</button>
-        </>
+                <div className="flex justify-center">
+                    <Button className={"mr-4"} variant={"outline"} onClick={redraw}>Redraw</Button>
+                    <Button onClick={save}>Save</Button>
+                </div>
+            </div>
     );
 }
