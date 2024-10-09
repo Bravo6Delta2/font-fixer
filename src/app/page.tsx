@@ -1,5 +1,5 @@
 "use client"
-import {ChangeEvent, useCallback, useEffect, useRef, useState} from "react";
+import {ChangeEvent, useEffect, useRef, useState} from "react";
 
 import opentype, {Font} from "opentype.js";
 import {Input} from "@/components/ui/input";
