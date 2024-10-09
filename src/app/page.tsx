@@ -1,5 +1,5 @@
 "use client"
-import {ChangeEvent, useEffect, useRef, useState} from "react";
+import {ChangeEvent, useCallback, useEffect, useRef, useState} from "react";
 
 import opentype, {Font} from "opentype.js";
 import {Input} from "@/components/ui/input";
@@ -21,7 +21,7 @@ export default function Home() {
         setFont(opentype.parse(await file.arrayBuffer()) as Font)
     }
 
-    const draw = () => {
+    const draw = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas) { return }
         const context = canvas.getContext('2d');
@@ -69,7 +69,7 @@ export default function Home() {
         context.moveTo(0, 200 - belowBaseline);
         context.lineTo(canvas.width, 200 - belowBaseline);
         context.stroke();
-    }
+    }, [font])
 
     const redraw = () => {
         if (!font) { return }
