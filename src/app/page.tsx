@@ -21,7 +21,7 @@ export default function Home() {
         setFont(opentype.parse(await file.arrayBuffer()) as Font)
     }
 
-    const draw = useCallback(() => {
+    const draw = () => {
         const canvas = canvasRef.current;
         if (!canvas) { return }
         const context = canvas.getContext('2d');
@@ -69,7 +69,7 @@ export default function Home() {
         context.moveTo(0, 200 - belowBaseline);
         context.lineTo(canvas.width, 200 - belowBaseline);
         context.stroke();
-    }, [font])
+    }
 
     const redraw = () => {
         if (!font) { return }
